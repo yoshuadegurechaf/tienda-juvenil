@@ -1,3 +1,17 @@
+<?php
+
+require 'config/conexion.php';
+$db = new Database();
+$con = $db -> connect();
+
+$sql = $con -> prepare ("SELECT id, nombre, descripcion, precio FROM productos WHERE activo =1");
+$sql -> execute();
+$resultado = $sql -> fetchAll(PDO::FETCH_ASSOC);
+
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="es" class="h-100">
 
@@ -118,7 +132,7 @@
                             </form>
                         </div>
                     </header>
-
+                    <?php foreach($resultado as $row ){ ?>
                     <div class="row">
                                                     <div class="col-lg-4 col-md-6 col-sm-6 d-flex">
                                 <div class="card w-100 my-2 shadow-2-strong">
@@ -144,6 +158,7 @@
                                     </div>
                                 </div>
                             </div>
+                            <?php } ?>
                                                     <div class="col-lg-4 col-md-6 col-sm-6 d-flex">
                                 <div class="card w-100 my-2 shadow-2-strong">
 
