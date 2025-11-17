@@ -3,6 +3,20 @@ require 'config/database.php';
 $db = new Database();
 $conexion = $db->conectar();
 session_start();
+
+$productos = isset($_SESSION['carrito']['productos']) ? $_SESSION['carrito']['productos'] : null;
+$lista_carrito = array();
+if ($productos != null) {
+    foreach ($productos as $clave => $cantidad) {
+        $sql = $conexion->prepare("SELECT id, nombre, precio, descuento, imagen FROM productosm WHERE id=? AND activo=1 LIMIT 1");
+        $sql->execute([$clave]);
+        $lista_carrito [] = $sql->fetch(PDO::FETCH_ASSOC);
+
+    }
+} else {
+    header("Location: index.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -66,55 +80,70 @@ session_start();
   <main class="flex-shrink-0">
     <div class="container">
 
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Precio</th>
-              <th>Cantidad</th>
-              <th>Subtotal</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Zapatos color cafe</td>
-              <td>$539.10</td>
-              <td><input type="number" id="cantidad_1" min="1" max="10" step="1" value="1" size="5"
-                  onchange="actualizaCantidad(this.value, 1)" /></td>
-
-              <td>
-                <div id="subtotal_1" name="subtotal[]">$539.10</div>
-              </td>
-              <td><a id="eliminar" class="btn btn-warning btn-sm" data-bs-id="1" data-bs-toggle="modal"
-                  data-bs-target="#eliminaModal"><i class="fas fa-trash-alt"></i></a></td>
-            </tr>
-            <tr>
-              <td>Laptop 15.6" con Windows 11</td>
-              <td>$11,400.00</td>
-              <td><input type="number" id="cantidad_2" min="1" max="10" step="1" value="1" size="5"
-                  onchange="actualizaCantidad(this.value, 2)" /></td>
-
-              <td>
-                <div id="subtotal_2" name="subtotal[]">$11,400.00</div>
-              </td>
-              <td><a id="eliminar" class="btn btn-warning btn-sm" data-bs-id="2" data-bs-toggle="modal"
-                  data-bs-target="#eliminaModal"><i class="fas fa-trash-alt"></i></a></td>
-            </tr>
-
-            <tr>
-              <td colspan="3"></td>
-              <td colspan="2">
-                <p class="h3" id="total">$11,939.10</p>
-              </td>
-            </tr>
+      <div class="row">
+        <div class="col-md-6">
+          <h2>detaslles de pago</h2>
+        </div>
+        <div class="col-md-6 text-end">
+          <a href="index.php" class="btn btn-primary btn-lg">Seguir comprando</a>
+        </div>
 
 
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Subtotal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if ($lista_carrito == null) {
+                echo '<tr><td colspan="5" class="text-center"><b>Lista vacía</b></td></tr>';
+            } else {
+                $total = 0;
+                foreach ($lista_carrito as $producto) {
+                    $_id = $producto['id'];
+                    $nombre = $producto['nombre'];
+                    $precio = $producto['precio'];
+                    $descuento = $producto['descuento'];
+                    $imagen = $producto['imagen'];
+                    $cantidad = $_SESSION['carrito']['productos'][$_id];
+                    $precio_desc = $precio - (($precio * $descuento) / 100);
+                    $subtotal = $precio_desc * $cantidad;
+                    $total += $subtotal;
+
+              }?>
+
+              <tr>
+                <td>
+                  <?php echo $nombre ?>
+                </td>
+
+                <td>
+                  <div id="subtotal_<?php echo $_id; ?>" name="subtotal[]">
+                    <?php echo MONEDA . number_format($subtotal, 2, '.', ','); ?>
+                  </div>
+                </td>
+              </tr>
+              <?php } ?>
+
+              <tr>
+                <td colspan="3"></td>
+                <td colspan="2">
+                  <p class="h3" id="total">
+                    <?php echo MONEDA . number_format($total,2,'.',','); ?>
+                  </p>
+                </td>
+
+              </tr>
+
+
+            </tbody>
+          </table>
+        </div>
       </div>
-
       <div class="row">
         <div class="col-md-5 offset-md-7 d-grid gap-2">
           <a href="login.php?pago" class="btn btn-primary btn-lg">Realizar pago</a>
