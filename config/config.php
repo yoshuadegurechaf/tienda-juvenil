@@ -1,8 +1,9 @@
 <?php 
 
 define ("KEY_WORD", "1234hola.*");
-define ("MONEDA","$") 
+define ("MONEDA","$");
 
 session_start();
 ?>
+
 
